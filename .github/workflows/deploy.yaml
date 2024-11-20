@@ -31,7 +31,7 @@ jobs:
         VPS_HOST: ${{ secrets.VPS_HOST }}
         VPS_USER: ${{ secrets.VPS_USER }}
         VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
-        # Flask-Api environment variables
+        # flask_boilerplate environment variables
         SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_DATABASE_URI }}
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
         JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
@@ -59,7 +59,7 @@ jobs:
         sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
           rm flaskapps/.env
 
-          # Flask-Api environment variables
+          # flask_boilerplate environment variables
           echo "SQLALCHEMY_DATABASE_URI=$SQLALCHEMY_DATABASE_URI" >> flaskapps/.env
           echo "SECRET_KEY=$SECRET_KEY" >> flaskapps/.env
           echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" >> flaskapps/.env
@@ -84,9 +84,7 @@ jobs:
           echo "REDIS_DB=$REDIS_DB" >> flaskapps/.env
           echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> flaskapps/.env
 
-          cp flaskapps/.env flaskapps/Flask-Api/.env
-          cp flaskapps/.env flaskapps/file-handler/.env
-          cp flaskapps/.env flaskapps/otp-handler/.env
+          cp flaskapps/.env flaskapps/flask_boilerplate/.env
         EOF
 
     - name: Install Dependencies on VPS
@@ -96,39 +94,21 @@ jobs:
         VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
         sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
-          cd flaskapps/Flask-Api
+          cd flaskapps/flask_boilerplate
           python3 -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
-          flask db init
-          flask db migrate -m "Initial migration"
-          flask db upgrade
-
-          cd flaskapps/file-handler
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-          flask db init
-          flask db migrate -m "Initial migration"
-          flask db upgrade
-
-          cd flaskapps/otp-handler
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-          flask db init
-          flask db migrate -m "Initial migration"
-          flask db upgrade
+          # flask db init
+          # flask db migrate -m "Initial migration"
+          # flask db upgrade
         EOF
 
-    - name: Restart Flask-Api on VPS
+    - name: Restart flask_boilerplate on VPS
       env:
         VPS_HOST: ${{ secrets.VPS_HOST }}
         VPS_USER: ${{ secrets.VPS_USER }}
         VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
         sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
-          sudo systemctl restart zenliteflask
-          sudo systemctl restart zenliteflaskfile
-          sudo systemctl restart zenliteflaskotp
+          sudo systemctl restart zenliteflasktest
         EOF

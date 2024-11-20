@@ -1,0 +1,134 @@
+name: Deploy ZenLite Backend
+
+on:
+  push:
+    branches:
+      - main  # Change to your deployment branch
+      # - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # environment: ZenliteEnv
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install sshpass
+      run: sudo apt-get install sshpass
+
+    - name: Secure Copy to VPS
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      run: |
+        SSHPASS=$VPS_PASSWORD sshpass -e scp -r -o StrictHostKeyChecking=no * $VPS_USER@$VPS_HOST:flaskapps
+
+    - name: Set Environment Variables on VPS
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        # Flask-Api environment variables
+        SQLALCHEMY_DATABASE_URI: ${{ secrets.SQLALCHEMY_DATABASE_URI }}
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        JWT_ACCESS_TOKEN_EXPIRES_DAYS: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRES_DAYS }}
+        JWT_REFRESH_TOKEN_EXPIRES_DAYS: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRES_DAYS }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        FILE_SERVER_URL: ${{ secrets.FILE_SERVER_URL }}
+        # File-handler environment variables
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_S3_BUCKET_NAME: ${{ secrets.AWS_S3_BUCKET_NAME }}
+        AWS_S3_REGION: ${{ secrets.AWS_S3_REGION }}
+        MAX_CONTENT_LENGTH: ${{ secrets.MAX_CONTENT_LENGTH }}
+        AUTH_ENDPOINT: ${{ secrets.AUTH_ENDPOINT }}
+        # OTP-handler environment variables
+        TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+        TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+        TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
+        REDIS_HOST: ${{ secrets.REDIS_HOST }}
+        REDIS_PORT: ${{ secrets.REDIS_PORT }}
+        REDIS_DB: ${{ secrets.REDIS_DB }}
+        REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+      run: |
+        sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
+          rm flaskapps/.env
+
+          # Flask-Api environment variables
+          echo "SQLALCHEMY_DATABASE_URI=$SQLALCHEMY_DATABASE_URI" >> flaskapps/.env
+          echo "SECRET_KEY=$SECRET_KEY" >> flaskapps/.env
+          echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" >> flaskapps/.env
+          echo "JWT_ACCESS_TOKEN_EXPIRES_DAYS=$JWT_ACCESS_TOKEN_EXPIRES_DAYS" >> flaskapps/.env
+          echo "JWT_REFRESH_TOKEN_EXPIRES_DAYS=$JWT_REFRESH_TOKEN_EXPIRES_DAYS" >> flaskapps/.env
+          echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> flaskapps/.env
+          echo "GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET" >> flaskapps/.env
+          echo "FILE_SERVER_URL=$FILE_SERVER_URL" >> flaskapps/.env
+          # File-handler environment variables
+          echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> flaskapps/.env
+          echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> flaskapps/.env
+          echo "AWS_S3_BUCKET_NAME=$AWS_S3_BUCKET_NAME" >> flaskapps/.env
+          echo "AWS_S3_REGION=$AWS_S3_REGION" >> flaskapps/.env
+          echo "MAX_CONTENT_LENGTH=$MAX_CONTENT_LENGTH" >> flaskapps/.env
+          echo "AUTH_ENDPOINT=$AUTH_ENDPOINT" >> flaskapps/.env
+          # OTP-handler environment variables
+          echo "TWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID" >> flaskapps/.env
+          echo "TWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN" >> flaskapps/.env
+          echo "TWILIO_PHONE_NUMBER=$TWILIO_PHONE_NUMBER" >> flaskapps/.env
+          echo "REDIS_HOST=$REDIS_HOST" >> flaskapps/.env
+          echo "REDIS_PORT=$REDIS_PORT" >> flaskapps/.env
+          echo "REDIS_DB=$REDIS_DB" >> flaskapps/.env
+          echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> flaskapps/.env
+
+          cp flaskapps/.env flaskapps/Flask-Api/.env
+          cp flaskapps/.env flaskapps/file-handler/.env
+          cp flaskapps/.env flaskapps/otp-handler/.env
+        EOF
+
+    - name: Install Dependencies on VPS
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      run: |
+        sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
+          cd flaskapps/Flask-Api
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          flask db init
+          flask db migrate -m "Initial migration"
+          flask db upgrade
+
+          cd flaskapps/file-handler
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          flask db init
+          flask db migrate -m "Initial migration"
+          flask db upgrade
+
+          cd flaskapps/otp-handler
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          flask db init
+          flask db migrate -m "Initial migration"
+          flask db upgrade
+        EOF
+
+    - name: Restart Flask-Api on VPS
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+        VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      run: |
+        sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
+          sudo systemctl restart zenliteflask
+          sudo systemctl restart zenliteflaskfile
+          sudo systemctl restart zenliteflaskotp
+        EOF

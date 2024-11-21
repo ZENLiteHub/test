@@ -173,4 +173,4 @@ def handle_typing(data):
     socketio.emit('typing', username)  # Broadcast typing status to all connected users
 
 if __name__ == "__main__":
-    socketio.run(app)
+    socketio.run(app, port=5003)

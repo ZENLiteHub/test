@@ -41,6 +41,7 @@ if (!sessionId || !token) {
     socket.on("disconnect", () => {
         statusElement.textContent = "Disconnected";
         console.log("Disconnected from the server");
+        window.location.href ="/login";
     });
 
     // Listen for server responses

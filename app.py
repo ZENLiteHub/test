@@ -131,16 +131,6 @@ def login():
     return render_template('login.html')
 
 api.add_namespace(ns, path='/auth')
-# Event handler for custom message (after connection)
-# @socketio.on("message")
-# def handle_message(message):
-#     print(f"Received message: {message}")
-#     emit("response", {"data": "Message received"})
-
-# Listen for connection events
-# @socketio.on('connect')
-# def handle_connect():
-#     print("Client connected")
 
 # Listen for disconnection events
 @socketio.on('disconnect')

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.IO Test</title>
+</head>
+<body>
+  <h1>Socket.IO Test</h1>
+  <p>Status: <span id="status">Disconnected</span></p>
+  <button id="sendMessage">Send Message</button>
+
+  <!-- Link to the JavaScript file -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="{{ url_for('static', filename='test.js') }}"></script>
+</body>
+</html>

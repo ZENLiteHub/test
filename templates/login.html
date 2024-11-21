@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="login-form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <script>
+        document.getElementById("login-form").addEventListener("submit", async function(event) {
+            event.preventDefault(); // Prevent form submission
+            const username = document.getElementById("username").value;
+
+            try {
+                const response = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Store session_id and token in localStorage
+                    localStorage.setItem("session_id", data.session_id);
+                    localStorage.setItem("token", data.token);
+
+                    alert("Login successful! Session ID and token saved.");
+                    window.location.href = "/home"; // Redirect to index page after login
+                } else {
+                    const errorData = await response.json();
+                    alert("Login failed: " + errorData.error);
+                }
+            } catch (error) {
+                console.error("Error logging in:", error);
+                alert("An error occurred. Please try again.");
+            }
+        });
+    </script>
+</body>
+</html>

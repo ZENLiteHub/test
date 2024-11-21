@@ -36,42 +36,24 @@ def verify_token(token):
     except jwt.InvalidTokenError:
         return None
 
-
-# Event handler for client connections
-@socketio.on("connect")
-def on_connect():
-    # Get the token from the query parameters or the headers (you can customize this)
-    token = request.args.get("token")  # or request.headers.get('Authorization')
-    if token:
-        # Verify the token
-        user_data = verify_token(token)
-        if user_data:
-            print(f"Client connected with user data: {user_data}")
-            return True  # Allow the connection to continue
-        else:
-            print("Invalid or expired token.")
-            disconnect()  # Disconnect the client if the token is invalid or expired
-            return False  # Reject the connection
-    else:
-        print("No token provided.")
-        disconnect()  # Disconnect the client if no token is provided
-        return False  # Reject the connection
-
-
+connected_users = {}
 @socketio.on('connect')
 def on_connect():
     # Retrieve the session_id and token from the query parameters
-    session_token = request.args.get('session_id')
+    session_id = request.args.get('session_id')
     token = request.args.get('token')
 
-    if token and session_token:
+    if token and session_id:
         # Verify the token
         user_data = verify_token(token)
         if user_data:
             # Verify the session_id
-            session_data = verify_session(token, session_token)
+            session_data = verify_session(token, session_id)
             if session_data:
-                print(f"Client authenticated as {user_data['sub']}")
+                username = user_data['sub']  # Assuming 'sub' contains the username
+                connected_users[request.sid] = username  # Store the username with the session ID
+                print(f"{username} connected.")
+                socketio.emit('user_list', list(connected_users.values()))  # Emit the updated user list
                 return True  # Allow connection
             else:
                 print("Invalid session_id.")
@@ -163,7 +145,10 @@ api.add_namespace(ns, path='/auth')
 # Listen for disconnection events
 @socketio.on('disconnect')
 def handle_disconnect():
-    print("Client disconnected")
+    username = connected_users.pop(request.sid, None)
+    if username:    
+        print(f"{username} disconnected")
+        socketio.emit('user_list', list(connected_users.values()))
 
 # Handle incoming messages
 @socketio.on('message')
@@ -173,6 +158,19 @@ def handle_message(data):
         # Process the message
     except KeyError as e:
         print("Error processing message:", e)
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    message = data['message']
+    sender_username = connected_users[request.sid]  # Get the sender's username
+
+    # Emit the message to all connected users
+    socketio.emit('receive_message', {'message': message, 'sender': sender_username})
+
+@socketio.on('typing')
+def handle_typing(data):
+    username = data['username']  # Get the username from the emitted data
+    socketio.emit('typing', username)  # Broadcast typing status to all connected users
 
 if __name__ == "__main__":
     socketio.run(app)

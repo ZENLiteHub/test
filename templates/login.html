@@ -30,6 +30,7 @@
                     // Store session_id and token in localStorage
                     localStorage.setItem("session_id", data.session_id);
                     localStorage.setItem("token", data.token);
+                    localStorage.setItem("username", username);
 
                     alert("Login successful! Session ID and token saved.");
                     window.location.href = "/home"; // Redirect to index page after login

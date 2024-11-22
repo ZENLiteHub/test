@@ -1,5 +1,5 @@
 // Replace with your server URL (relative since served on the same domain)
-const SERVER_URL = "http://92.205.25.58:5003";
+const SERVER_URL = "/";
 
 // Retrieve session_id and token from localStorage
 const sessionId = localStorage.getItem("session_id");
@@ -41,7 +41,7 @@ if (!sessionId || !token) {
     socket.on("disconnect", () => {
         statusElement.textContent = "Disconnected";
         console.log("Disconnected from the server");
-        window.location.href ="/login";
+        // window.location.href ="/login";
     });
 
     // Listen for server responses

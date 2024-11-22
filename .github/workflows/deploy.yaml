@@ -24,7 +24,7 @@ jobs:
         VPS_USER: ${{ secrets.VPS_USER }}
         VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
-        SSHPASS=$VPS_PASSWORD sshpass -e scp -r -o StrictHostKeyChecking=no * $VPS_USER@$VPS_HOST:flaskapps
+        SSHPASS=$VPS_PASSWORD sshpass -e scp -r -o StrictHostKeyChecking=no * $VPS_USER@$VPS_HOST:flaskapps/flask_test
 
     - name: Set Environment Variables on VPS
       env:
@@ -59,7 +59,7 @@ jobs:
         sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
           rm flaskapps/.env
 
-          # flask_boilerplate environment variables
+          # flask_test environment variables
           echo "SQLALCHEMY_DATABASE_URI=$SQLALCHEMY_DATABASE_URI" >> flaskapps/.env
           echo "SECRET_KEY=$SECRET_KEY" >> flaskapps/.env
           echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" >> flaskapps/.env
@@ -84,7 +84,7 @@ jobs:
           echo "REDIS_DB=$REDIS_DB" >> flaskapps/.env
           echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> flaskapps/.env
 
-          cp flaskapps/.env flaskapps/flask_boilerplate/.env
+          cp flaskapps/.env flaskapps/flask_test/.env
         EOF
 
     - name: Install Dependencies on VPS
@@ -94,7 +94,7 @@ jobs:
         VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
         sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
-          cd flaskapps/flask_boilerplate
+          cd flaskapps/flask_test
           python3 -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
@@ -103,7 +103,7 @@ jobs:
           # flask db upgrade
         EOF
 
-    - name: Restart flask_boilerplate on VPS
+    - name: Restart flask_test on VPS
       env:
         VPS_HOST: ${{ secrets.VPS_HOST }}
         VPS_USER: ${{ secrets.VPS_USER }}

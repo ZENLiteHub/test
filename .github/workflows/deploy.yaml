@@ -84,7 +84,7 @@ jobs:
           echo "REDIS_DB=$REDIS_DB" >> flaskapps/.env
           echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> flaskapps/.env
 
-          cp flaskapps/.env flaskapps/flask_test/.env
+          cp flaskapps/Flask-Api/.env flaskapps/flask_test/.env
         EOF
 
     - name: Install Dependencies on VPS

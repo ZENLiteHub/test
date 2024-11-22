@@ -30,7 +30,7 @@ class Config:
 
     SECRET_KEY = os.getenv('SECRET_KEY')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'default_jwt_secret_key')
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES_DAYS', 1)))
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES_DAYS', 15) or 15 ))
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=int(os.getenv('JWT_REFRESH_TOKEN_EXPIRES_DAYS', 30)))
     # GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
     # GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')

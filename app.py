@@ -19,7 +19,7 @@ app.config.from_object(Config)
 api = Api(
     app,
     version="1.0",
-    title="Chat Application API",
+    title="Chat Socket Application API",
     description="API documentation for a Flask-SocketIO Chat Application",
     doc="/doc/swagger"  # Serve Swagger UI at /doc/swagger
 )
@@ -47,6 +47,7 @@ def on_connect():
         # Verify the token
         user_data = verify_token(token)
         if user_data:
+            app.logger.info(f"Connecting with session_id: {session_id}, token: {token}")
             # Verify the session_id
             session_data = verify_session(token, session_id)
             if session_data:

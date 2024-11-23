@@ -7,12 +7,13 @@ from flask import Flask, render_template, request, jsonify, session
 from flask_socketio import SocketIO, emit, disconnect
 import jwt
 from datetime import datetime, timedelta
-
+from flask_cors import CORS
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+CORS(app)
+socketio = SocketIO()
 
-
+socketio.init_app(app, cors_allowed_origins="*")
 # Secret key for JWT encoding and decoding (in a real app, store this securely)
 app.config.from_object(Config)
 

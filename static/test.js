@@ -1,5 +1,5 @@
 // Replace with your server URL (relative since served on the same domain)
-const SERVER_URL = "ws://3.145.76.96/";
+const SERVER_URL = "ws://92.205.25.58:5003";
 
 // Retrieve session_id and token from localStorage
 const sessionId = localStorage.getItem("session_id");

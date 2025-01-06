@@ -17,6 +17,8 @@ if (!sessionId || !token) {
             session_id: sessionId,
             token: token,
         },
+        forceNew: true,
+        transports: ['polling', 'websocket']
     });
 
     // DOM elements
